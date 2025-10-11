@@ -1,5 +1,6 @@
 # LiquidNode
-Manage servers quickly with our speciallized platform, skip paying for services. We are free and open source, and an easy way to manage your VPS in seconds! No setup, no credit card, and its easy!
+We have a new mascot, Nodey!
 
-# LiquidNode CLI?
-We dont have one avaliable, sadly. we will start making one later
+<img width="32" height="32" alt="New Piskel-1 png" src="https://github.com/user-attachments/assets/5ba06263-8a8d-4333-a15a-450629febaee" />
+
+Liquid Node allows you to make servers without the cloud,
