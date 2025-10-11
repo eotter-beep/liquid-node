@@ -4,6 +4,9 @@ import subprocess
 import threading
 import webbrowser
 import os
+import shutil
+
+from installer import InstallerWindow, MissingDependency, build_python_install_command
 
 # Create the main window
 window = tk.Tk()
@@ -116,6 +119,94 @@ status_label = ttk.Label(
 )
 status_label.pack(anchor="w", pady=(0, 20))
 
+
+def detect_missing_dependencies() -> list[MissingDependency]:
+    """Return a list of dependencies that need to be installed."""
+
+    missing: list[MissingDependency] = []
+    if shutil.which("docker") is None:
+        missing.append(
+            MissingDependency(
+                name="Docker CLI",
+                description=(
+                    "Docker must be installed so Liquid Node can build and run"
+                    " container images."
+                ),
+                help_url="https://docs.docker.com/get-docker/",
+            )
+        )
+
+    try:
+        import gymnasium  # type: ignore  # noqa: F401
+    except ModuleNotFoundError:
+        missing.append(
+            MissingDependency(
+                name="Gymnasium",
+                description=(
+                    "Gymnasium powers the memory capsule trainer bundled with"
+                    " Liquid Node."
+                ),
+                install_command=build_python_install_command("gymnasium"),
+                help_url="https://gymnasium.farama.org/",
+            )
+        )
+
+    try:
+        import numpy  # type: ignore  # noqa: F401
+    except ModuleNotFoundError:
+        missing.append(
+            MissingDependency(
+                name="NumPy",
+                description="NumPy is required by the memory capsule environment.",
+                install_command=build_python_install_command("numpy"),
+                help_url="https://numpy.org/install/",
+            )
+        )
+
+    return missing
+
+
+installer_window: InstallerWindow | None = None
+
+
+def ensure_dependencies() -> list[MissingDependency]:
+    """Check requirements and update the UI accordingly."""
+
+    missing = detect_missing_dependencies()
+    if missing:
+        status_label.config(
+            text="Missing dependencies detected. Open the installer to continue.",
+            style="StatusError.TLabel",
+        )
+        create_server_button.config(state="disabled")
+    else:
+        status_label.config(
+            text="All dependencies satisfied. Click to create a server.",
+            style="StatusInfo.TLabel",
+        )
+        create_server_button.config(state="normal")
+    return missing
+
+
+def open_installer(missing: list[MissingDependency]) -> None:
+    """Show the installer window, creating it if necessary."""
+
+    global installer_window
+    if installer_window is not None and installer_window.winfo_exists():
+        installer_window.deiconify()
+        installer_window.lift()
+        installer_window.refresh(missing)
+        return
+
+    installer_window = InstallerWindow(
+        window,
+        missing,
+        on_refresh=ensure_dependencies,
+        brand_background=brand_background,
+    )
+    installer_window.transient(window)
+    installer_window.grab_set()
+
 # Function to create and start the server
 def server_make():
     def run_docker():
@@ -187,6 +278,15 @@ create_server_button = ttk.Button(
 )
 create_server_button.pack(fill="x")
 
+# Button to open the dependency installer manually
+dependency_button = ttk.Button(
+    controls_frame,
+    text="Check Requirements",
+    command=lambda: open_installer(ensure_dependencies()),
+    style="Secondary.TButton",
+)
+dependency_button.pack(fill="x", pady=(12, 0))
+
 # Create a button to open the server in a browser
 open_browser_button = ttk.Button(
     controls_frame,
@@ -239,6 +339,10 @@ output_label = ttk.Label(
     justify="left",
 )
 output_label.pack(fill="both", expand=True)
+
+initial_missing = ensure_dependencies()
+if initial_missing:
+    window.after(300, lambda: open_installer(initial_missing))
 
 # Start the Tkinter event loop
 window.mainloop()
