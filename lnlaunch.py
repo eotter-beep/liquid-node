@@ -10,7 +10,7 @@ from installer import InstallerWindow, MissingDependency, build_python_install_c
 
 # Create the main window
 window = tk.Tk()
-window.title("Liquid Node 2")
+window.title("Liquid Node 2.1")
 window.geometry("500x400")
 
 # Apply themed styling
@@ -228,6 +228,7 @@ CMD ["nginx", "-g", "daemon off;"]
 
             # Verify the Dockerfile exists before proceeding
             if not os.path.exists(dockerfile_path):
+                print("Debug: Dockerfile wasn't found!"
                 status_label.config(text="Dockerfile not found!", style="StatusError.TLabel")
                 return
 
@@ -237,7 +238,7 @@ CMD ["nginx", "-g", "daemon off;"]
             subprocess.run(["docker", "run", "-d", "-p", "8080:80", "--name", "liquid_server", "new-server"], check=True)
 
             status_label.config(
-                text="Server started successfully on port 8080!",
+                text="Server started successfully, localhost:8080",
                 style="StatusSuccess.TLabel",
             )
             open_browser_button.config(state="normal")  # Enable the Open Browser button
@@ -272,7 +273,7 @@ controls_frame.pack(fill="x", pady=(0, 16))
 # Create the server button
 create_server_button = ttk.Button(
     controls_frame,
-    text="Create a Server",
+    text="Create Server",
     command=server_make,
     style="Primary.TButton",
 )
@@ -303,7 +304,7 @@ command_section.pack(fill="x", pady=(0, 16))
 
 command_label = ttk.Label(
     command_section,
-    text="Enter command for server:",
+    text="Enter server command:",
     style="StatusProgress.TLabel",
 )
 command_label.pack(anchor="w", pady=(0, 8))
